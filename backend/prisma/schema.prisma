@@ -1,0 +1,128 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  IMPORTER
+  FORWARDER
+}
+
+enum ForwarderStatus {
+  PENDING_ACTIVATION
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+enum ShipmentStatus {
+  OPEN
+  CLOSED
+}
+
+enum TransportType {
+  EXPRESS_PARCEL
+  DIRECT_RAILWAY
+  SEA_RAILWAY
+  ROAD_TRANSPORT
+  AIR_FREIGHT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Forwarder specific fields
+  inn               String?          @unique
+  companyName       String?
+  forwarderStatus   ForwarderStatus? @default(PENDING_ACTIVATION)
+
+  // Relations
+  shipmentsCreated Shipment[] @relation("ShipmentCreator")
+  bids             Bid[]
+
+  @@index([role])
+  @@index([forwarderStatus])
+}
+
+model Shipment {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+
+  // Dates
+  readyForPickupDate    DateTime
+  requiredDeliveryDate  DateTime
+  bidsDeadline          DateTime
+
+  // Incoterms
+  incoterms             String
+  incotermsLocation     String
+
+  // Transport types - stored as JSON array
+  transportTypes        String[]
+
+  // Addresses
+  pickupAddress         String
+  deliveryAddress       String
+
+  // Status
+  status                ShipmentStatus @default(OPEN)
+
+  // Metadata
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  // Relations
+  creatorId             String
+  creator               User           @relation("ShipmentCreator", fields: [creatorId], references: [id])
+  bids                  Bid[]
+
+  @@index([status])
+  @@index([bidsDeadline])
+  @@index([creatorId])
+}
+
+model Bid {
+  id                    String   @id @default(cuid())
+
+  // Cost breakdown
+  costsBeforeBorder     Float
+  costsBeforeBorderVat  Float
+  costsAfterBorder      Float
+  costsAfterBorderVat   Float
+  localCosts            Float
+  localCostsVat         Float
+
+  // Calculated total
+  totalCost             Float
+
+  // Transport type for this bid
+  transportType         String
+
+  // Comments/notes
+  notes                 String?
+
+  // Metadata
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  shipmentId            String
+  shipment              Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  forwarderId           String
+  forwarder             User     @relation(fields: [forwarderId], references: [id])
+
+  @@index([shipmentId])
+  @@index([forwarderId])
+  @@index([createdAt])
+}
