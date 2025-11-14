@@ -2,6 +2,28 @@
 
 Современное веб-приложение для сбора и сравнения ставок от экспедиторов на транспортно-экспедиционное обслуживание.
 
+## 🚀 Быстрый старт (Docker)
+
+**Самый простой способ запустить систему за 2 минуты:**
+
+```bash
+# 1. Установите Docker Desktop (если еще не установлен)
+# macOS: https://www.docker.com/products/docker-desktop/
+
+# 2. Клонируйте и запустите
+git clone <repository-url>
+cd quoteme
+./start.sh
+```
+
+Откройте http://localhost:3000 и войдите:
+- Импортер: `importer@example.com` / `password123`
+- Экспедитор: `forwarder@example.com` / `password123`
+
+📖 **Детальная инструкция:** [QUICKSTART.md](./QUICKSTART.md) | [DOCKER_SETUP.md](./DOCKER_SETUP.md)
+
+---
+
 ## Особенности
 
 ### Для импортера:
